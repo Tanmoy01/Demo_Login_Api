@@ -1,14 +1,11 @@
 package com.example.demo_api.Service;
 
 import com.example.demo_api.Model.User;
+import com.example.demo_api.Model.UserDetails;
+import com.example.demo_api.Model.UserLogin;
 import com.example.demo_api.Repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestParam;
-
-import java.util.List;
 
 @Service
 public class UserService {
@@ -16,40 +13,47 @@ public class UserService {
     @Autowired
     UserRepository userRepository;
 
-    public String registerUser(User newUser){
-        List<User> users = userRepository.findAll();
-        //System.out.println("New user: " + newUser.toString());
-        for (User user : users) {
-            //System.out.println("Registered user: " + newUser.toString());
-            if (user.equals(newUser)) {
-                return "Already exists";
-            }
-        }
-        userRepository.save(newUser);
+    public String registerUser(UserDetails newUser) {
+        User user = userRepository.findByUsername(newUser.getUsername());
+        if (user != null)
+            return "User already exists";
+
+        user = new User();
+        user.setName(newUser.getName());
+        user.setSurname(newUser.getSurname());
+        user.setUsername(newUser.getUsername());
+        user.setPassword(newUser.getPassword());
+        userRepository.save(user);
         return "User added successful";
     }
 
-    public String loginUser(String username, String password){
-        List<User> users = userRepository.findAll();
-        //System.out.println(users);
-        for (User other : users) {
-            if(other.getUsername().equals(username) && other.getPassword().equals(password)){
-                return "Logged in successful";
-            }
-        }
-        return "try again";
+    public String loginUser(UserLogin userLogin) {
+        User user = userRepository.findByUsernameAndPassword(userLogin.getUsername(), userLogin.getPassword());
+        if (user != null)
+            return "successful";
+        return "User does not exist";
     }
 
-    public String deleteUser(String username, String password){
-        List<User> users = userRepository.findAll();
-        //System.out.println(users.toString());
-        for (User other : users) {
-            if(other.getUsername().equals(username) && other.getPassword().equals(password)){
-                userRepository.delete(other);
-                return "Deleted";
-            }
+    public String deleteUser(UserLogin userLogin) {
+        User user = userRepository.findByUsernameAndPassword(userLogin.getUsername(), userLogin.getPassword());
+        if (user != null) {
+            userRepository.delete(user);
+            return "successful";
         }
-        return "Invalid";
+        return "User does not exist";
+
     }
 
+    public String updateUser(String userName, UserDetails userDetails){
+        User user = userRepository.findByUsername(userName);
+        if (user == null)
+            return "User does not exist";
+
+        user.setName(userDetails.getName());
+        user.setSurname(userDetails.getSurname());
+        user.setUsername(userDetails.getUsername());
+        user.setPassword(userDetails.getPassword());
+        userRepository.save(user);
+        return "successful";
+    }
 }

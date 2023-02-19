@@ -1,13 +1,11 @@
 package com.example.demo_api.Controller;
-import java.util.*;
 
 import com.example.demo_api.Model.User;
-import com.example.demo_api.Repository.UserRepository;
+import com.example.demo_api.Model.UserDetails;
+import com.example.demo_api.Model.UserLogin;
 import com.example.demo_api.Service.UserService;
-import jakarta.transaction.Status;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,29 +16,55 @@ public class UserController {
     @Autowired
     UserService userService;
 
-    @PostMapping("/users/sign_up")
-    public ResponseEntity registerUser(@RequestBody User newUser) {
+    @PostMapping("/sign_up")
+    public ResponseEntity registerUser(@RequestBody UserDetails newUser) {
 
-        String response= userService.registerUser(newUser);
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
-    }
-
-    @GetMapping("/users/login")
-    public ResponseEntity loginUser(@RequestParam("username") String username,
-                                    @RequestParam("password") String password) {
-        String response = userService.loginUser(username, password);
-        return new ResponseEntity<>(response, HttpStatus.FOUND);
-    }
-
-    @DeleteMapping("/deleteUser")
-    public ResponseEntity deleteUser(@RequestParam("username") String username,
-                                     @RequestParam("password") String password){
-        String response = userService.deleteUser(username, password);
-        if (response.equals("Deleted")){
-            return new ResponseEntity<>(response,HttpStatus.FOUND);
+        try {
+            String response = userService.registerUser(newUser);
+            return new ResponseEntity<>(response, HttpStatus.CREATED);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        if(response.equals("try again"))
-        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
-        return new ResponseEntity<>(response,HttpStatus.BAD_REQUEST);
+
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity loginUser(@RequestBody UserLogin user) {
+        try {
+            String response = userService.loginUser(user);
+            if ("successful".equals(response))
+                return new ResponseEntity<>(response, HttpStatus.OK);
+            else
+                return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+    }
+
+    @DeleteMapping
+    public ResponseEntity deleteUser(@RequestBody UserLogin user) {
+        try {
+            String response = userService.deleteUser(user);
+            if ("successful".equals(response))
+                return new ResponseEntity<>(response, HttpStatus.OK);
+            else
+                return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PutMapping
+    public ResponseEntity updateUser(@RequestParam String userName, @RequestBody UserDetails user) {
+        try {
+            String response = userService.updateUser(userName, user);
+            if ("successful".equals(response))
+                return new ResponseEntity<>(response, HttpStatus.OK);
+            else
+                return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 }
